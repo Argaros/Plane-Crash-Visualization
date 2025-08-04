@@ -7,16 +7,14 @@
       :manufacturers="manufacturers"
       :statistics="statistics"
       @update:filters="handleFiltersUpdate"
+      @debounced-filter-change="handleDebouncedFilterChange"
     />
 
     <!-- Map -->
     <div id="map"></div>
 
     <!-- Loading indicator -->
-    <LoadingOverlay 
-      :show="loading" 
-      :message="loadingMessage" 
-    />
+    <LoadingOverlay :show="loading" :message="loadingMessage" />
 
     <!-- Legend -->
     <MapLegend />
@@ -32,97 +30,125 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, watch, ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
-import { useMapFilters, useMap, useCrashData } from '../composables/index.js'
-import MapControls from '../components/MapControls.vue'
-import MapLegend from '../components/MapLegend.vue'
-import LoadingOverlay from '../components/LoadingOverlay.vue'
+import { onMounted, onUnmounted, watch, ref, computed } from "vue";
+import { useRoute } from "vue-router";
+import { useMapFilters, useMap, useCrashData } from "../composables/index.js";
+import MapControls from "../components/MapControls.vue";
+import MapLegend from "../components/MapLegend.vue";
+import LoadingOverlay from "../components/LoadingOverlay.vue";
 
-const route = useRoute()
+const route = useRoute();
 
 // Composables
-const { filters, updateFiltersWithStatistics, buildApiParams } = useMapFilters()
-const { initializeMap, loadMarkers, destroyMap, highlightCrash } = useMap()
-const { 
-  crashData, 
-  operators, 
-  manufacturers, 
+const { filters, updateFiltersWithStatistics, buildApiParams } =
+  useMapFilters();
+const { initializeMap, loadMarkers, destroyMap, highlightCrash } = useMap();
+const {
+  crashData,
+  operators,
+  manufacturers,
   statistics,
-  loading, 
-  error, 
-  fetchCrashData, 
-  initializeData 
-} = useCrashData()
+  loading,
+  error,
+  fetchCrashData,
+  initializeData,
+} = useCrashData();
 
 // Local state
 const loadingMessage = computed(() => {
   if (loading.value) {
-    return 'Loading crash data...'
+    return "Loading crash data...";
   }
-  return ''
-})
+  return "";
+});
 
 // Debounced filter application
-let filterTimeout = null
+let filterTimeout = null;
 const debouncedFetchData = () => {
-  clearTimeout(filterTimeout)
+  clearTimeout(filterTimeout);
   filterTimeout = setTimeout(async () => {
-    const params = buildApiParams()
-    await fetchCrashData(params)
-  }, 500)
-}
+    const params = buildApiParams();
+    await fetchCrashData(params);
+  }, 500);
+};
 
 // Event handlers
 const handleFiltersUpdate = (newFilters) => {
-  filters.value = newFilters
-}
+  filters.value = newFilters;
+};
+
+const handleDebouncedFilterChange = (newValue) => {
+  // This will be called after 500ms of no changes
+  const params = buildApiParams();
+  fetchCrashData(params);
+};
 
 // Lifecycle
 onMounted(async () => {
-  initializeMap()
-  await initializeData()
-  
+  initializeMap();
+  await initializeData();
+
   // Initial data fetch
-  const params = buildApiParams()
-  await fetchCrashData(params)
-})
+  const params = buildApiParams();
+  await fetchCrashData(params);
+});
 
 onUnmounted(() => {
-  destroyMap()
+  destroyMap();
   if (filterTimeout) {
-    clearTimeout(filterTimeout)
+    clearTimeout(filterTimeout);
   }
-})
+});
 
 // Watchers
-watch(filters, debouncedFetchData, { deep: true })
+watch(filters, debouncedFetchData, { deep: true });
 
-watch(statistics, (newStatistics) => {
-  if (newStatistics) {
-    updateFiltersWithStatistics(newStatistics)
-  }
-}, { immediate: true })
-
-watch(crashData, (newData) => {
-  if (newData) {
-    loadMarkers(newData)
-    
-    // Check if we need to highlight and open popup for a specific crash
-    if (newData.length > 0 && route.query.highlight && route.query.openPopup === 'true') {
-      const crashId = parseInt(route.query.highlight)
-      highlightCrash(crashId)
+watch(
+  statistics,
+  (newStatistics) => {
+    if (newStatistics) {
+      updateFiltersWithStatistics(newStatistics);
     }
-  }
-}, { immediate: true })
+  },
+  { immediate: true }
+);
+
+watch(
+  crashData,
+  (newData) => {
+    if (newData) {
+      loadMarkers(newData);
+
+      // Check if we need to highlight and open popup for a specific crash
+      if (
+        newData.length > 0 &&
+        route.query.highlight &&
+        route.query.openPopup === "true"
+      ) {
+        const crashId = parseInt(route.query.highlight);
+        highlightCrash(crashId);
+      }
+    }
+  },
+  { immediate: true }
+);
 
 // Watch for route changes to handle direct navigation with highlight parameters
-watch(() => route.query, (newQuery) => {
-  if (newQuery.highlight && newQuery.openPopup === 'true' && crashData.value && crashData.value.length > 0) {
-    const crashId = parseInt(newQuery.highlight)
-    highlightCrash(crashId)
-  }
-}, { immediate: true })
+watch(
+  () => route.query,
+  (newQuery) => {
+    if (
+      newQuery.highlight &&
+      newQuery.openPopup === "true" &&
+      crashData.value &&
+      crashData.value.length > 0
+    ) {
+      const crashId = parseInt(newQuery.highlight);
+      highlightCrash(crashId);
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <style scoped>

@@ -1,6 +1,6 @@
 <template>
-  <div class="dual-range-slider">
-    <!-- Header with labels and values -->
+  <div class="year-range-slider">
+    <!-- Header with labels -->
     <div class="slider-header">
       <label v-if="label" class="slider-label">{{ label }}</label>
       <div class="slider-values">
@@ -12,7 +12,7 @@
 
     <!-- Slider container -->
     <div
-      class="dual-range-container"
+      class="slider-container"
       :style="{
         '--range-start': ((modelValue.start - min) / (max - min)) * 100,
         '--range-end': ((modelValue.end - min) / (max - min)) * 100,
@@ -30,7 +30,7 @@
       <input
         ref="minSlider"
         type="range"
-        class="form-range range-min"
+        class="slider-input slider-min"
         :min="min"
         :max="max"
         :value="modelValue.start"
@@ -45,7 +45,7 @@
       <input
         ref="maxSlider"
         type="range"
-        class="form-range range-max"
+        class="slider-input slider-max"
         :min="min"
         :max="max"
         :value="modelValue.end"
@@ -56,7 +56,7 @@
         @touchstart="bringToFront('max')"
       />
 
-      <!-- Custom thumb indicators -->
+      <!-- Thumb indicators -->
       <div
         class="slider-thumb slider-thumb-min"
         :style="{ left: ((modelValue.start - min) / (max - min)) * 100 + '%' }"
@@ -71,16 +71,23 @@
       </div>
     </div>
 
-    <!-- Min/max labels -->
-    <div class="d-flex justify-content-between mt-2">
-      <small class="text-muted">{{ formatValue(min) }}</small>
-      <small class="text-muted">{{ formatValue(max) }}</small>
+    <!-- Optional: Show min/max labels -->
+    <div v-if="showMinMaxLabels" class="slider-limits">
+      <span class="limit-label">{{ formatValue(min) }}</span>
+      <span class="limit-label">{{ formatValue(max) }}</span>
     </div>
   </div>
 </template>
 
 <script setup>
-import { defineEmits, defineProps, ref, nextTick, onUnmounted } from "vue";
+import {
+  defineEmits,
+  defineProps,
+  ref,
+  nextTick,
+  computed,
+  onUnmounted,
+} from "vue";
 import { useDebouncedSlider } from "../composables/useDebouncedSlider.js";
 
 const props = defineProps({
@@ -110,6 +117,10 @@ const props = defineProps({
   label: {
     type: String,
     default: "",
+  },
+  showMinMaxLabels: {
+    type: Boolean,
+    default: false,
   },
   sliderColor: {
     type: String,
@@ -146,14 +157,15 @@ const formatValue = (value) => {
   return value;
 };
 
+// Bring slider to front when interacting
 const bringToFront = async (slider) => {
   await nextTick();
 
-  const container = document.querySelector(".dual-range-container");
+  const container = document.querySelector(".slider-container");
   if (!container) return;
 
-  const minInput = container.querySelector(".range-min");
-  const maxInput = container.querySelector(".range-max");
+  const minInput = container.querySelector(".slider-min");
+  const maxInput = container.querySelector(".slider-max");
 
   if (slider === "min") {
     minInput.style.zIndex = "4";
@@ -211,7 +223,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.dual-range-slider {
+.year-range-slider {
   width: 100%;
   margin: 1rem 0;
 }
@@ -252,10 +264,10 @@ onUnmounted(() => {
   font-weight: 400;
 }
 
-.dual-range-container {
+.slider-container {
   position: relative;
   height: 32px;
-  margin: 10px 0;
+  margin: 0.5rem 0;
 }
 
 .slider-track {
@@ -283,7 +295,7 @@ onUnmounted(() => {
   transition: all 0.2s ease;
 }
 
-.dual-range-container input[type="range"] {
+.slider-input {
   position: absolute;
   width: 100%;
   height: 32px;
@@ -292,22 +304,23 @@ onUnmounted(() => {
   appearance: none;
   background: transparent;
   pointer-events: none;
-}
-
-.dual-range-container input[type="range"].range-min {
   z-index: 2;
 }
 
-.dual-range-container input[type="range"].range-max {
+.slider-input.slider-min {
+  z-index: 2;
+}
+
+.slider-input.slider-max {
   z-index: 3;
 }
 
-.dual-range-container input[type="range"]:focus {
+.slider-input:focus {
   z-index: 4;
 }
 
 /* Webkit slider styles */
-.dual-range-container input[type="range"]::-webkit-slider-thumb {
+.slider-input::-webkit-slider-thumb {
   appearance: none;
   height: 32px;
   width: 32px;
@@ -320,24 +333,24 @@ onUnmounted(() => {
   transition: all 0.2s ease;
 }
 
-.dual-range-container input[type="range"]::-webkit-slider-thumb:hover {
+.slider-input::-webkit-slider-thumb:hover {
   background: transparent;
   transform: none;
   box-shadow: none;
 }
 
-.dual-range-container input[type="range"]::-webkit-slider-thumb:active {
+.slider-input::-webkit-slider-thumb:active {
   transform: none;
   box-shadow: none;
 }
 
-.dual-range-container input[type="range"]::-webkit-slider-track {
+.slider-input::-webkit-slider-track {
   appearance: none;
   background: transparent;
 }
 
 /* Firefox slider styles */
-.dual-range-container input[type="range"]::-moz-range-thumb {
+.slider-input::-moz-range-thumb {
   height: 32px;
   width: 32px;
   border-radius: 50%;
@@ -349,18 +362,18 @@ onUnmounted(() => {
   transition: all 0.2s ease;
 }
 
-.dual-range-container input[type="range"]::-moz-range-thumb:hover {
+.slider-input::-moz-range-thumb:hover {
   background: transparent;
   transform: none;
   box-shadow: none;
 }
 
-.dual-range-container input[type="range"]::-moz-range-thumb:active {
+.slider-input::-moz-range-thumb:active {
   transform: none;
   box-shadow: none;
 }
 
-.dual-range-container input[type="range"]::-moz-range-track {
+.slider-input::-moz-range-track {
   background: transparent;
 }
 
@@ -417,6 +430,18 @@ onUnmounted(() => {
   opacity: 1;
 }
 
+.slider-limits {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+}
+
+.limit-label {
+  font-size: 0.75rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .slider-header {
@@ -434,8 +459,8 @@ onUnmounted(() => {
     height: 20px;
   }
 
-  .dual-range-container input[type="range"]::-webkit-slider-thumb,
-  .dual-range-container input[type="range"]::-moz-range-thumb {
+  .slider-input::-webkit-slider-thumb,
+  .slider-input::-moz-range-thumb {
     height: 20px;
     width: 20px;
   }
@@ -449,6 +474,10 @@ onUnmounted(() => {
 
   .slider-label {
     color: #e9ecef;
+  }
+
+  .limit-label {
+    color: #adb5bd;
   }
 
   .thumb-tooltip {
