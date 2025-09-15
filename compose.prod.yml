@@ -1,0 +1,11 @@
+services:
+  frontend:
+    build:
+      context: ./PlaneCrashVisualizationClient
+      dockerfile: Dockerfile
+    ports: !override
+      - '80:80'
+    volumes: !reset
+    environment: !reset
+    depends_on:
+      - backend

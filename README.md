@@ -6,25 +6,14 @@ A full-stack web application for visualizing and analyzing aircraft crash data. 
 
 ### Required Software
 
-#### .NET Development
-- **.NET 9.0 SDK** or higher
-  - Download: [https://dotnet.microsoft.com/download/dotnet/9.0](https://dotnet.microsoft.com/download/dotnet/9.0)
-  - Check: `dotnet --version`
+### Docker
 
-#### Frontend Development
-- **Node.js** (Version 18.x or higher)
-  - Download: [https://nodejs.org/](https://nodejs.org/)
-  - Check: `node --version`
-- **npm** (comes with Node.js)
-  - Check: `npm --version`
+- **Docker Desktop** (Windows/Mac) or Docker Engine (Linux)
+  - Download: [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop)
+  - Check: `docker --version`
 
-#### Database
-- **SQL Server LocalDB** (recommended) or SQL Server Express
-  - Comes with Visual Studio or can be installed separately
-  - Alternative: SQL Server Express
-  - Download: [https://docs.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb](https://docs.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb)
+### Development Environment (Optional)
 
-#### Development Environment (Optional)
 - **Visual Studio 2022** or **Visual Studio Code**
 - **Git** for version control
 
@@ -59,68 +48,61 @@ git clone https://github.com/Argaros/Plane-Crash-Visualization
 cd Plane-Crash-Visualization
 ```
 
-### 2. Backend Setup
+### 2. Setup
 
-#### Install Dependencies
-```bash
-dotnet restore
-```
+Copy the file `.env.dist` and rename it to `.env`.
+Choose a password for the MSSQL super admin (`SA_PASSWORD`).
 
-#### Configure Database
-The application uses SQL Server LocalDB. Connection string in `appsettings.json`:
+Copy the file `.env.dist` in "./PlaneCrashVisualizationClient" and rename it to `.env`.
 
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=PlaneCrashDB;Trusted_Connection=true;MultipleActiveResultSets=true"
-  }
-}
-```
+The database will automatically be initialized on startup with the file `Data/skript.sql`.
 
-#### Create Database
-**Important**: Execute this step before first startup!
+### 3. Start Application
+
+#### Development Mode (with hot-reloading)
 
 ```bash
-sqlcmd -S "(localdb)\mssqllocaldb" -i "Data\skript.sql"
+docker compose up [--build] -d
 ```
 
-#### Install Entity Framework Tools (if not present)
-```bash
-dotnet tool install --global dotnet-ef
-```
+Backend runs on: `http://localhost:5021`
 
-#### Build and Test Backend
-```bash
-dotnet build
-```
+Frontend runs on: `http://localhost:5173`
 
-### 3. Frontend Setup
+Hot reloading might not work with WSL on Windows. In this case you need to have Node.js installed to start the frontend manually:
 
 ```bash
 cd PlaneCrashVisualizationClient
 npm install
+npm run dev -- --host
 ```
 
-### 4. Start Application
+#### Production Mode
 
-#### Start Backend (Terminal 1)
+In this mode the frontend is built and served by Nginx. It is not a full production setup because it still builds all images locally before starting the containers.
+
 ```bash
-# In main directory
-dotnet run
+docker compose -f compose.yml -f compose.prod.yml up [--build] -d
 ```
-Backend runs on: `http://localhost:5021`
 
-#### Start Frontend (Terminal 2)
+Frontend runs on: `http://localhost`
+
+### 4. Stop Application
+
 ```bash
-# In PlaneCrashVisualizationClient directory
-cd PlaneCrashVisualizationClient
-npm run dev
+docker compose down
 ```
-Frontend runs on: `http://localhost:5173`
+
+or
+
+```bash
+docker compose -f compose.yml -f compose.prod.yml down
+```
 
 ## 📊 Features
 
 ### Backend (ASP.NET Core Web API)
+
 - **RESTful API** for aircraft crash data
 - **Entity Framework Core** for database access
 - **SQL Server LocalDB** integration
@@ -130,6 +112,7 @@ Frontend runs on: `http://localhost:5173`
 - **Swagger/OpenAPI** documentation
 
 ### Frontend (Vue.js 3)
+
 - **Interactive map** with Leaflet.js
 - **Charts and visualizations** with Chart.js
 - **Responsive design** with Bootstrap 5
@@ -140,6 +123,7 @@ Frontend runs on: `http://localhost:5173`
 ## 🔧 Technologies Used
 
 ### Backend
+
 - **ASP.NET Core 9.0** - Web API framework
 - **Entity Framework Core 9.0** - ORM
 - **SQL Server LocalDB** - Database
@@ -148,6 +132,7 @@ Frontend runs on: `http://localhost:5173`
 - **Microsoft.Data.SqlClient** - Database connection
 
 ### Frontend
+
 - **Vue.js 3** - Frontend framework
 - **Vite** - Build tool
 - **Vue Router** - Navigation
@@ -160,9 +145,11 @@ Frontend runs on: `http://localhost:5173`
 ## 🗃️ Database
 
 ### Manual Database Initialization
+
 **Important**: The database must be created manually before the first application startup.
 
 #### Create Database with SQL Script
+
 Run the following command in Terminal/Command Prompt:
 
 ```bash
@@ -170,17 +157,20 @@ sqlcmd -S "(localdb)\mssqllocaldb" -i "Data\skript.sql"
 ```
 
 **Notes:**
+
 - Ensure SQL Server LocalDB is installed and running
 - The path to `skript.sql` must be correct relative to the current directory
 - The script creates the `PlaneCrashDB` database with all tables and data
 
 #### Alternative: SQL Server Management Studio (SSMS)
+
 1. Open SSMS
 2. Connect to `(localdb)\mssqllocaldb`
 3. Open the file `Data/skript.sql`
 4. Execute the script (F5)
 
 ### Data Model
+
 - **Crashes** - Main table with crash data
 - **Fields**: Date, location, airline, aircraft type, passengers, casualties, etc.
 - **Coordinates** for map visualization
@@ -189,12 +179,14 @@ sqlcmd -S "(localdb)\mssqllocaldb" -i "Data\skript.sql"
 ## 🌐 API Endpoints
 
 ### API Documentation
+
 - **Swagger UI**: `http://localhost:5021/swagger/index.html`
   - Interactive API documentation
   - Direct endpoint testing available
   - Complete request/response schemas
 
 ### Main Endpoints
+
 - `GET /api/crashes` - All crashes with filter options
 - `GET /api/crashes/map-data` - Data for map visualization
 - `GET /api/crashes/summary` - Summary statistics
@@ -209,10 +201,12 @@ sqlcmd -S "(localdb)\mssqllocaldb" -i "Data\skript.sql"
 ### Common Issues
 
 #### Backend doesn't start
+
 - Check if .NET 9.0 SDK is installed: `dotnet --version`
 - Ensure port 5021 is not occupied
 
 #### Database errors
+
 - Check if SQL Server LocalDB is running
 - Ensure the database was created with the SQL script:
   ```bash
@@ -221,11 +215,13 @@ sqlcmd -S "(localdb)\mssqllocaldb" -i "Data\skript.sql"
 - Check the connection string in `appsettings.json`
 
 #### Frontend doesn't load
+
 - Check if Node.js is installed: `node --version`
 - Delete `node_modules` and run `npm install` again
 - Ensure the backend is running on port 5021
 
 #### API errors (400 Bad Request)
+
 - Ensure the database was created with the SQL script
 - The backend requires data in the database - this is included in the SQL script
 - Check the browser console for detailed error messages
@@ -233,11 +229,13 @@ sqlcmd -S "(localdb)\mssqllocaldb" -i "Data\skript.sql"
 ## 📝 Development
 
 ### Adding New Features
+
 1. Backend: Extend controllers/services
 2. Frontend: Create new views/components
 3. API integration with Axios
 
 ### Database Changes
+
 ```bash
 dotnet ef migrations add MigrationName
 dotnet ef database update

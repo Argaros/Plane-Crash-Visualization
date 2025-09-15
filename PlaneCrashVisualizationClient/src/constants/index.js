@@ -1,14 +1,14 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:5021/api',
+  BASE_URL: import.meta.env.VITE_API_URL,
   ENDPOINTS: {
     OPERATORS: '/crashes/operators',
     MANUFACTURERS: '/crashes/manufacturers',
     MAP_DATA: '/crashes/map-data',
     SEARCH: '/crashes',
-    STATISTICS: '/crashes/statistics'
-  }
-}
+    STATISTICS: '/crashes/statistics',
+  },
+};
 
 // Filter Configuration - Dynamic version that uses actual dataset statistics
 export const createFilterConfig = (statistics) => {
